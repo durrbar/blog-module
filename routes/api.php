@@ -1,7 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Modules\Blog\Http\Controllers\BlogController;
+use Modules\Blog\Http\Controllers\PostController;
+use Modules\Tag\Models\Tag;
+use Modules\Tag\Resources\TagResource;
 
 /*
  *--------------------------------------------------------------------------
@@ -15,5 +17,13 @@ use Modules\Blog\Http\Controllers\BlogController;
 */
 
 Route::middleware(['auth:sanctum'])->prefix('v1')->group(function () {
-    Route::apiResource('blog', BlogController::class)->names('blog');
+    Route::apiResource('blog', PostController::class)->withTrashed()->names('posts');
+
+    Route::get('tag', fn() => ['tags' => TagResource::collection(Tag::all())]);
+});
+
+Route::prefix('posts')->name('posts.')->controller(PostController::class)->group(function () {
+    Route::get('featureds', 'featured')->name('featured');
+    Route::get('latest', 'latest')->name('latest');
+    Route::get('search', 'search')->name('search');
 });
