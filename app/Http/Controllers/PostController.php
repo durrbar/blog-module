@@ -45,7 +45,7 @@ class PostController extends Controller
     {
         $isAdmin = $request->is('api/v1/dashboard/posts*');
         $cacheKey = $isAdmin ? self::CACHE_ADMIN_POSTS . $request->query('page', 1) : self::CACHE_PUBLIC_POSTS . $request->query('page', 1);
-        $cacheDuration = now()->addMinutes(10);
+        $cacheDuration = now()->addMinutes(config('cache.durations'));
 
         $posts = Cache::remember($cacheKey, $cacheDuration, function () use ($isAdmin) {
             $query = QueryBuilder::for(Post::class)
@@ -109,8 +109,9 @@ class PostController extends Controller
         $this->authorize('view', $post);
 
         $cacheKey = "post_{$post->id}";
+        $cacheDuration = now()->addMinutes(config('cache.durations'));
 
-        $post = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($post) {
+        $post = Cache::remember($cacheKey, $cacheDuration, function () use ($post) {
             return $this->loadPostRelations($post);
         });
 
@@ -176,7 +177,7 @@ class PostController extends Controller
     public function featured(): JsonResponse
     {
         try {
-            $featureds = Cache::remember(self::CACHE_FEATURED_POSTS, 60 * 60, function () {
+            $featureds = Cache::remember(self::CACHE_FEATURED_POSTS, now()->addMinutes(config('cache.durations')), function () {
                 return Post::where('featured', 1)
                     ->select('id', 'slug', 'title', 'author_id', 'created_at', 'total_views', 'total_shares')
                     ->with(['author', 'cover'])
@@ -196,7 +197,7 @@ class PostController extends Controller
     public function latest(): JsonResponse
     {
         try {
-            $latest = Cache::remember(self::CACHE_LATEST_POSTS, 60 * 60, function () {
+            $latest = Cache::remember(self::CACHE_LATEST_POSTS, now()->addMinutes(config('cache.durations')), function () {
                 return Post::select(
                     'id',
                     'slug',
