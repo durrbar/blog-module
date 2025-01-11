@@ -44,7 +44,7 @@ class PostController extends Controller
     public function index(Request $request): JsonResponse
     {
         $isAdmin = $request->is('api/v1/dashboard/posts*');
-        $cacheKey = $isAdmin ? self::CACHE_ADMIN_POSTS . $request->query('page', 1) : self::CACHE_PUBLIC_POSTS . $request->query('page', 1);
+        $cacheKey = sprintf('%s%s', $isAdmin ? self::CACHE_ADMIN_POSTS : self::CACHE_PUBLIC_POSTS, $request->query('page', 1));
         $cacheDuration = now()->addMinutes(config('cache.durations'));
 
         $posts = Cache::remember($cacheKey, $cacheDuration, function () use ($isAdmin) {
