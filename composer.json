@@ -8,7 +8,7 @@
             "email": "kidmax285@gmail.com"
         }
     ],
-    "homepage": "https://github.com/ikidmax/blog-module",
+    "homepage": "https://github.com/durrbar/blog-module",
     "license": "MIT",
     "require": {
         "php": "^8.2",

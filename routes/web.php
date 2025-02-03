@@ -14,6 +14,6 @@ use Modules\Blog\Http\Controllers\BlogController;
 |
 */
 
-Route::group([], function () {
-    Route::resource('blog', BlogController::class)->names('blog');
-});
+// Route::group([], function () {
+//     Route::resource('blog', BlogController::class)->names('blog');
+// });

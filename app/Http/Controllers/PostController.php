@@ -73,7 +73,7 @@ class PostController extends Controller
     {
         try {
             // Authorize the action using policies
-            $this->authorize('view');
+            $this->authorize('create');
 
             $postData = $request->validated();
             $postData['total_views'] = $postData['total_views'] ?? 0;
@@ -344,5 +344,18 @@ class PostController extends Controller
             'success' => false,
             'message' => $message,
         ], $statusCode);
+    }
+
+    /**
+     * Generate a unique filename for an uploaded image.
+     *
+     * @param UploadedFile $image The uploaded image file.
+     * @return string A unique filename based on the original name and current timestamp.
+     */
+    protected function generateUniqueFileName(UploadedFile $image): string
+    {
+        $extension = $image->getClientOriginalExtension();
+        $originalName = pathinfo($image->getClientOriginalName(), PATHINFO_FILENAME);
+        return uniqid($originalName . '_', true) . '.' . $extension;
     }
 }
