@@ -2,6 +2,7 @@
 
 namespace Modules\Blog\Models;
 
+use App\Models\Image;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -126,10 +127,10 @@ class Post extends Model implements Searchable
     /**
      * Return the comments relationship.
      */
-    // public function cover(): MorphOne
-    // {
-    //     return $this->morphOne(Image::class, 'imageable');
-    // }
+    public function cover(): MorphOne
+    {
+        return $this->morphOne(Image::class, 'imageable');
+    }
 
     /**
      * Return the tags relationship.

@@ -16,14 +16,21 @@ use Modules\Tag\Resources\TagResource;
  *
 */
 
-Route::middleware(['auth:sanctum'])->prefix('v1')->group(function () {
-    Route::apiResource('blog', PostController::class)->withTrashed()->names('posts');
+Route::prefix('v1')->group(function () {
+    Route::middleware(['auth:sanctum'])->name('dashboard.')->prefix('dashboard')->group(function () {
+        Route::apiResource('posts', PostController::class)->withTrashed()->names('posts');
 
-    Route::get('tag', fn() => ['tags' => TagResource::collection(Tag::all())]);
-});
+        Route::get('tag', fn() => ['tags' => TagResource::collection(Tag::all())]);
+    });
 
-Route::prefix('posts')->name('posts.')->controller(PostController::class)->group(function () {
-    Route::get('featureds', 'featured')->name('featured');
-    Route::get('latest', 'latest')->name('latest');
-    Route::get('search', 'search')->name('search');
+    Route::controller(PostController::class)->name('posts.')->prefix('posts')->group(function () {
+
+        Route::get('featureds', 'featured')->name('featured');
+
+        Route::get('latest', 'latest')->name('latest');
+
+        Route::get('search', 'search')->name('search');
+    });
+
+    Route::apiResource('posts', PostController::class);
 });
