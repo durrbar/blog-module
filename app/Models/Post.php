@@ -71,18 +71,9 @@ class Post extends Model implements Searchable
     protected function readTime(): array
     {
         return [
-            // Attribute for parse. You can split it with
-            // a dot (e.g 'content.text') if the desired
-            // attribute is inside a array or json
             'source' => 'content',
 
-            // No required. If this key is not present, then the current application locale is taken.
-            'locale' => 'en',
-
-            // No required. Options array.
-            'options' => [
-                'strip_tags' => false
-            ]
+            'localable' => true
         ];
     }
 
