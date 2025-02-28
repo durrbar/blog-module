@@ -16,7 +16,7 @@
         "intervention/image": "^3.7",
         "intervention/image-laravel": "^1.3",
         "league/flysystem-aws-s3-v3": "3.0",
-        "leshkens/laravel-read-time": "^1.4",
+        "leshkens/laravel-read-time": "^1.5",
         "spatie/laravel-permission": "^6.4",
         "spatie/laravel-query-builder": "^5.8",
         "spatie/laravel-searchable": "^1.12",
