@@ -29,7 +29,7 @@ class PostAdminController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $cacheKey = self::CACHE_ADMIN_POSTS . $request->query('page', 1);
+        $cacheKey = self::CACHE_ADMIN_POSTS.$request->query('page', 1);
         $cacheDuration = now()->addMinutes(config('cache.duration'));
 
         $posts = Cache::remember($cacheKey, $cacheDuration, function () {
@@ -38,7 +38,7 @@ class PostAdminController extends Controller
                 ->with(['author', 'cover', 'tags'])
                 ->allowedFilters([AllowedFilter::exact('publish')])
                 ->allowedSorts('created_at')
-                ->withCount(['comments' => fn($q) => $q->whereNull('parent_id')])
+                ->withCount(['comments' => fn ($q) => $q->whereNull('parent_id')])
                 ->paginate(10);
         });
 
@@ -62,7 +62,7 @@ class PostAdminController extends Controller
                     'total_shares' => 0,
                     'total_favorites' => 0,
                 ]);
-                
+
                 $this->handleCoverImage($post, $request);
 
                 return $post;
@@ -73,7 +73,7 @@ class PostAdminController extends Controller
 
             return response()->json(['post' => new PostResource($post)], Response::HTTP_CREATED);
         } catch (\Exception $e) {
-            return $this->handleError(self::ERROR_CREATE . ': ' . $e->getMessage(), $request);
+            return $this->handleError(self::ERROR_CREATE.': '.$e->getMessage(), $request);
         }
     }
 
@@ -117,7 +117,7 @@ class PostAdminController extends Controller
 
             return response()->json(['post' => new PostResource($post)]);
         } catch (\Exception $e) {
-            return $this->handleError(self::ERROR_UPDATE . ': ' . $e->getMessage(), $request);
+            return $this->handleError(self::ERROR_UPDATE.': '.$e->getMessage(), $request);
         }
     }
 
@@ -130,7 +130,7 @@ class PostAdminController extends Controller
             // Authorize the action using policies
             $this->authorize('delete', $post);
 
-            DB::transaction(function () use ($post) {
+            DB::transaction(function () use ($post): void {
                 if ($post->cover && Storage::exists($post->cover->path)) {
                     Storage::delete($post->cover->path);
                     $post->cover->delete();
@@ -144,7 +144,7 @@ class PostAdminController extends Controller
 
             return response()->json(['message' => 'Post deleted successfully.'], Response::HTTP_OK);
         } catch (\Exception $e) {
-            return $this->handleError(self::ERROR_DELETE . ': ' . $e->getMessage(), null);
+            return $this->handleError(self::ERROR_DELETE.': '.$e->getMessage(), null);
         }
     }
 }

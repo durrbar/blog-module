@@ -18,7 +18,7 @@ class PostPolicy
         //
     }
 
-        /**
+    /**
      * Determine if the user can view any posts.
      */
     public function viewAny(User $user)

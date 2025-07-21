@@ -9,6 +9,7 @@ use Modules\Core\Traits\HasPagination;
 class PostCollection extends ResourceCollection
 {
     use HasPagination;
+
     /**
      * Transform the resource collection into an array.
      */

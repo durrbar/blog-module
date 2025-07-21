@@ -4,8 +4,8 @@ namespace Modules\Blog\Models;
 
 use App\Models\Image;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
@@ -25,11 +25,11 @@ use Spatie\Tags\HasTags;
 class Post extends Model implements Searchable
 {
     use HasFactory;
+    use HasReadTime;
+    use HasSlug;
+    use HasTags;
     use HasUuids;
     use SoftDeletes;
-    use HasTags;
-    use HasSlug;
-    use HasReadTime;
 
     /**
      * The table associated with the model.
@@ -51,7 +51,7 @@ class Post extends Model implements Searchable
         'total_shares',
         'meta_keywords',
         'total_favorites',
-        'meta_description'
+        'meta_description',
     ];
 
     // protected static function newFactory(): PostFactory
@@ -73,7 +73,7 @@ class Post extends Model implements Searchable
         return [
             'source' => 'content',
 
-            'localable' => true
+            'localable' => true,
         ];
     }
 

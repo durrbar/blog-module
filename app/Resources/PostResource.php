@@ -38,7 +38,7 @@ class PostResource extends JsonResource
             'totalComments' => $this->whenCounted('comments'),
             'coverUrl' => $this->cover ? $this->cover->url : null,
             'author' => new UserResource($this->whenLoaded('author')),
-            'tags' => TagResource::collection($this->whenLoaded('tags'))
+            'tags' => TagResource::collection($this->whenLoaded('tags')),
         ];
     }
 }

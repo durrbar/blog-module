@@ -26,7 +26,7 @@ class PostController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $cacheKey = self::CACHE_PUBLIC_POSTS . $request->query('page', 1);
+        $cacheKey = self::CACHE_PUBLIC_POSTS.$request->query('page', 1);
         $cacheDuration = now()->addMinutes(config('cache.duration'));
 
         $posts = Cache::remember($cacheKey, $cacheDuration, function () {
@@ -60,7 +60,7 @@ class PostController extends Controller
                 return Post::where('featured', 1)
                     ->select('id', 'slug', 'title', 'author_id', 'created_at', 'total_views', 'total_shares')
                     ->with(['author', 'cover'])
-                    ->withCount(['comments' => function ($query) {
+                    ->withCount(['comments' => function ($query): void {
                         $query->whereNull('parent_id');
                     }])
                     ->limit(5)
@@ -69,7 +69,7 @@ class PostController extends Controller
 
             return response()->json(['featureds' => PostResource::collection($featureds)], Response::HTTP_OK);
         } catch (\Exception $e) {
-            return $this->handleError(self::ERROR_FEATURED . ': ' . $e->getMessage(), null);
+            return $this->handleError(self::ERROR_FEATURED.': '.$e->getMessage(), null);
         }
     }
 
@@ -89,7 +89,7 @@ class PostController extends Controller
                     'description'
                 )
                     ->with(['author', 'cover'])
-                    ->withCount(['comments' => function ($query) {
+                    ->withCount(['comments' => function ($query): void {
                         $query->whereNull('parent_id');
                     }])
                     ->orderBy('created_at', 'desc')
@@ -99,7 +99,7 @@ class PostController extends Controller
 
             return response()->json(['latest' => PostResource::collection($latest)], Response::HTTP_OK);
         } catch (\Exception $e) {
-            return $this->handleError(self::ERROR_LATEST . ': ' . $e->getMessage(), null);
+            return $this->handleError(self::ERROR_LATEST.': '.$e->getMessage(), null);
         }
     }
 
@@ -109,7 +109,7 @@ class PostController extends Controller
 
         // Perform the search and register the Post model with searchable attributes
         $results = (new Search())
-            ->registerModel(Post::class, function (ModelSearchAspect $modelSearchAspect) {
+            ->registerModel(Post::class, function (ModelSearchAspect $modelSearchAspect): void {
                 $modelSearchAspect
                     ->addSearchableAttribute('title')
                     ->with('cover'); // Eager load the cover relationship

@@ -17,14 +17,14 @@ use Modules\Tag\Resources\TagResource;
  *
 */
 
-Route::prefix('v1')->group(function () {
-    Route::middleware(['auth:sanctum'])->name('dashboard.')->prefix('dashboard')->group(function () {
+Route::prefix('v1')->group(function (): void {
+    Route::middleware(['auth:sanctum'])->name('dashboard.')->prefix('dashboard')->group(function (): void {
         Route::apiResource('posts', PostAdminController::class)->withTrashed()->names('posts');
 
-        Route::get('tag', fn() => ['tags' => TagResource::collection(Tag::all())]);
+        Route::get('tag', fn () => ['tags' => TagResource::collection(Tag::all())]);
     });
 
-    Route::controller(PostController::class)->name('posts.')->prefix('posts')->group(function () {
+    Route::controller(PostController::class)->name('posts.')->prefix('posts')->group(function (): void {
 
         Route::get('featureds', 'featured')->name('featured');
 

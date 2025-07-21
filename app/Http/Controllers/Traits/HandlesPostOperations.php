@@ -15,21 +15,28 @@ use Modules\Common\Facades\FileHelper;
 trait HandlesPostOperations
 {
     protected const CACHE_PUBLIC_POSTS = 'api.v1.posts.public_';
+
     protected const CACHE_ADMIN_POSTS = 'api.v1.posts.admin_';
+
     protected const CACHE_FEATURED_POSTS = 'api.v1.posts.featured';
+
     protected const CACHE_LATEST_POSTS = 'api.v1.posts.latest';
 
     // Error messages
     protected const ERROR_CREATE = 'Failed to create post';
+
     protected const ERROR_UPDATE = 'Failed to update post';
+
     protected const ERROR_DELETE = 'Failed to delete post';
+
     protected const ERROR_FEATURED = 'Failed to retrieve featured posts';
+
     protected const ERROR_LATEST = 'Failed to retrieve latest posts';
 
     private function loadPostRelations(Post $post): Post
     {
         return $post->load(['author', 'cover', 'tags'])
-            ->loadCount(['comments' => fn($q) => $q->whereNull('parent_id')]);
+            ->loadCount(['comments' => fn ($q) => $q->whereNull('parent_id')]);
     }
 
     protected function handleCoverImage(Post $post, Request $request): void
@@ -59,6 +66,7 @@ trait HandlesPostOperations
 
         if (is_string($incomingCover)) {
             $post->cover()->updateOrCreate([], ['path' => $incomingCover]);
+
             return;
         }
 
@@ -87,8 +95,8 @@ trait HandlesPostOperations
      */
     private function clearPostCache(): void
     {
-        Cache::forget(self::CACHE_PUBLIC_POSTS . '*');
-        Cache::forget(self::CACHE_ADMIN_POSTS . '*');
+        Cache::forget(self::CACHE_PUBLIC_POSTS.'*');
+        Cache::forget(self::CACHE_ADMIN_POSTS.'*');
         Cache::forget(self::CACHE_FEATURED_POSTS);
         Cache::forget(self::CACHE_LATEST_POSTS);
     }
@@ -96,9 +104,9 @@ trait HandlesPostOperations
     /**
      * Handle error responses.
      *
-     * @param string $message The error message to be logged and returned in the response.
-     * @param Request|null $request The HTTP request that triggered the error, if available.
-     * @param int $statusCode The HTTP status code for the response (default is 500).
+     * @param  string  $message  The error message to be logged and returned in the response.
+     * @param  Request|null  $request  The HTTP request that triggered the error, if available.
+     * @param  int  $statusCode  The HTTP status code for the response (default is 500).
      * @return JsonResponse A JSON response containing the success status and error message.
      */
     protected function handleError(string $message, ?Request $request = null, int $statusCode = Response::HTTP_INTERNAL_SERVER_ERROR): JsonResponse
