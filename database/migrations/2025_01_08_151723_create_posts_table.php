@@ -1,10 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class () extends Migration {
+return new class() extends Migration
+{
     /**
      * Run the migrations.
      */
@@ -18,7 +21,7 @@ return new class () extends Migration {
             $table->string('publish')->default('draft');
             $table->boolean('featured')->default(false);
             $table->longText('content');
-            $table->foreignUuid('author_id')->constrained('users')->onDelete('cascade');
+            $table->foreignUuid('author_id')->constrained('users')->casecadeOnDelete();
             $table->text('description');
             $table->integer('total_views')->default(0);
             $table->integer('total_shares')->default(0);
