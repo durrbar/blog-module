@@ -36,7 +36,7 @@ class PostResource extends JsonResource
             'deletedAt' => $this->deleted_at,
             'comments' => new CommentCollection($this->whenHas('comments')),
             'totalComments' => $this->whenCounted('comments'),
-            'coverUrl' => $this->cover ? $this->cover->url : null,
+            'coverUrl' => $this->whenLoaded('cover', fn () => $this->cover?->url),
             'author' => new UserResource($this->whenLoaded('author')),
             'tags' => TagResource::collection($this->whenLoaded('tags')),
         ];
