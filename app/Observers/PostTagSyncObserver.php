@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Modules\Blog\Observers;
 
 use Modules\Blog\Models\Post;

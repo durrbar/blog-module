@@ -11,7 +11,7 @@ use Modules\Comment\Http\Resources\CommentCollection;
 use Modules\Tag\Resources\TagResource;
 use Modules\User\Resources\UserResource;
 
-final class PostResource extends JsonResource
+class PostResource extends JsonResource
 {
     /**
      * Transform the resource into an array.

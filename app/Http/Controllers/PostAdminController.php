@@ -1,8 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Modules\Blog\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Exception;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -72,7 +75,7 @@ class PostAdminController extends Controller
             $this->clearPostCache();
 
             return response()->json(['post' => new PostResource($post)], Response::HTTP_CREATED);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $this->handleError(self::ERROR_CREATE.': '.$e->getMessage(), $request);
         }
     }
@@ -116,7 +119,7 @@ class PostAdminController extends Controller
             $this->clearPostCache();
 
             return response()->json(['post' => new PostResource($post)]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $this->handleError(self::ERROR_UPDATE.': '.$e->getMessage(), $request);
         }
     }
@@ -143,7 +146,7 @@ class PostAdminController extends Controller
             $this->clearPostCache();
 
             return response()->json(['message' => 'Post deleted successfully.'], Response::HTTP_OK);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $this->handleError(self::ERROR_DELETE.': '.$e->getMessage(), null);
         }
     }

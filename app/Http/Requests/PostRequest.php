@@ -8,7 +8,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Enum;
 use Modules\Blog\Enums\PostPublishStatus;
 
-final class PostRequest extends FormRequest
+class PostRequest extends FormRequest
 {
     /**
      * Get the validation rules that apply to the request.

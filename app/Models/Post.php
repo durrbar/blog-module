@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Modules\Blog\Models;
 
 use App\Models\Image;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Table;
+use Illuminate\Database\Eloquent\Attributes\UsePolicy;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -15,6 +18,7 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Leshkens\LaravelReadTime\Traits\HasReadTime;
 use Modules\Blog\Enums\PostPublishStatus;
+use Modules\Blog\Policies\PostPolicy;
 use Modules\Comment\Models\Comment;
 use Modules\User\Models\User;
 use Spatie\Searchable\Searchable;
@@ -25,7 +29,23 @@ use Spatie\Tags\HasTags;
 
 // use Modules\Blog\Database\Factories\PostFactory;
 
-final class Post extends Model implements Searchable
+#[Table('posts')]
+#[Fillable([
+    'title',
+    'publish',
+    'content',
+    'cover_url',
+    'author_id',
+    'meta_title',
+    'total_views',
+    'description',
+    'total_shares',
+    'meta_keywords',
+    'total_favorites',
+    'meta_description',
+])]
+#[UsePolicy(PostPolicy::class)]
+class Post extends Model implements Searchable
 {
     use HasFactory;
     use HasReadTime;
@@ -33,39 +53,6 @@ final class Post extends Model implements Searchable
     use HasTags;
     use HasUuids;
     use SoftDeletes;
-
-    /**
-     * The table associated with the model.
-     */
-    protected $table = 'posts';
-
-    /**
-     * The attributes that are mass assignable.
-     */
-    protected $fillable = [
-        'title',
-        'publish',
-        'content',
-        'cover_url',
-        'author_id',
-        'meta_title',
-        'total_views',
-        'description',
-        'total_shares',
-        'meta_keywords',
-        'total_favorites',
-        'meta_description',
-    ];
-
-    // protected static function newFactory(): PostFactory
-    // {
-    //     // return PostFactory::new();
-    // }
-
-    protected $casts = [
-        'publish' => PostPublishStatus::class,
-        'meta_keywords' => 'array', // Automatically casts to/from JSON
-    ];
 
     public static function getTagClassName(): string
     {
@@ -126,6 +113,22 @@ final class Post extends Model implements Searchable
         return $this
             ->morphToMany(self::getTagClassName(), 'taggable', 'taggables', null, 'tag_id')
             ->orderBy('order_column');
+    }
+
+    /**
+     * The table associated with the model.
+     */
+
+    // protected static function newFactory(): PostFactory
+    // {
+    //     // return PostFactory::new();
+    // }
+    protected function casts(): array
+    {
+        return [
+            'publish' => PostPublishStatus::class,
+            'meta_keywords' => 'array', // Automatically casts to/from JSON
+        ];
     }
 
     protected function readTime(): array

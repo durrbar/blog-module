@@ -20,7 +20,7 @@ use Spatie\QueryBuilder\QueryBuilder;
 use Spatie\Searchable\ModelSearchAspect;
 use Spatie\Searchable\Search;
 
-final class PostController extends Controller
+class PostController extends Controller
 {
     use AuthorizesRequests;
     use HandlesPostOperations;

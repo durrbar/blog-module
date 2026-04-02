@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Modules\Blog\Http\Controllers\Traits;
 
 use Illuminate\Http\JsonResponse;
@@ -33,17 +35,39 @@ trait HandlesPostOperations
 
     protected const ERROR_LATEST = 'Failed to retrieve latest posts';
 
-    private function loadPostRelations(Post $post): Post
-    {
-        return $post->load(['author', 'cover', 'tags'])
-            ->loadCount(['comments' => fn ($q) => $q->whereNull('parent_id')]);
-    }
-
     protected function handleCoverImage(Post $post, Request $request): void
     {
         if ($request->hasFile('coverUrl') || $request->input('coverUrl')) {
             $this->processCoverImage($post, $request);
         }
+    }
+
+    protected function deleteCoverImage(Post $post): void
+    {
+        if ($post->cover && Storage::exists($post->cover->path)) {
+            Storage::delete($post->cover->path);
+            $post->cover->delete();
+        }
+    }
+
+    /**
+     * Handle error responses.
+     *
+     * @param  string  $message  The error message to be logged and returned in the response.
+     * @param  Request|null  $request  The HTTP request that triggered the error, if available.
+     * @param  int  $statusCode  The HTTP status code for the response (default is 500).
+     * @return JsonResponse A JSON response containing the success status and error message.
+     */
+    protected function handleError(string $message, ?Request $request = null, int $statusCode = Response::HTTP_INTERNAL_SERVER_ERROR): JsonResponse
+    {
+        // Use the ErrorHelper facade for error handling
+        return ErrorHelper::handleError($message, $request, $statusCode);
+    }
+
+    private function loadPostRelations(Post $post): Post
+    {
+        return $post->load(['author', 'cover', 'tags'])
+            ->loadCount(['comments' => fn ($q) => $q->whereNull('parent_id')]);
     }
 
     private function processCoverImage(Post $post, Request $request): void
@@ -82,14 +106,6 @@ trait HandlesPostOperations
         }
     }
 
-    protected function deleteCoverImage(Post $post): void
-    {
-        if ($post->cover && Storage::exists($post->cover->path)) {
-            Storage::delete($post->cover->path);
-            $post->cover->delete();
-        }
-    }
-
     /**
      * Clear the relevant post cache.
      */
@@ -99,19 +115,5 @@ trait HandlesPostOperations
         Cache::forget(self::CACHE_ADMIN_POSTS.'*');
         Cache::forget(self::CACHE_FEATURED_POSTS);
         Cache::forget(self::CACHE_LATEST_POSTS);
-    }
-
-    /**
-     * Handle error responses.
-     *
-     * @param  string  $message  The error message to be logged and returned in the response.
-     * @param  Request|null  $request  The HTTP request that triggered the error, if available.
-     * @param  int  $statusCode  The HTTP status code for the response (default is 500).
-     * @return JsonResponse A JSON response containing the success status and error message.
-     */
-    protected function handleError(string $message, ?Request $request = null, int $statusCode = Response::HTTP_INTERNAL_SERVER_ERROR): JsonResponse
-    {
-        // Use the ErrorHelper facade for error handling
-        return ErrorHelper::handleError($message, $request, $statusCode);
     }
 }

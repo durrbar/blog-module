@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Modules\Blog\Providers;
 
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -44,25 +46,6 @@ class BlogServiceProvider extends ServiceProvider
     }
 
     /**
-     * Register commands in the format of Command::class
-     */
-    protected function registerCommands(): void
-    {
-        // $this->commands([]);
-    }
-
-    /**
-     * Register command Schedules.
-     */
-    protected function registerCommandSchedules(): void
-    {
-        // $this->app->booted(function () {
-        //     $schedule = $this->app->make(Schedule::class);
-        //     $schedule->command('inspire')->hourly();
-        // });
-    }
-
-    /**
      * Register translations.
      */
     public function registerTranslations(): void
@@ -75,30 +58,6 @@ class BlogServiceProvider extends ServiceProvider
         } else {
             $this->loadTranslationsFrom(module_path($this->name, 'lang'), $this->nameLower);
             $this->loadJsonTranslationsFrom(module_path($this->name, 'lang'));
-        }
-    }
-
-    /**
-     * Register config.
-     */
-    protected function registerConfig(): void
-    {
-        $relativeConfigPath = config('modules.paths.generator.config.path');
-        $configPath = module_path($this->name, $relativeConfigPath);
-
-        if (is_dir($configPath)) {
-            $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($configPath));
-
-            foreach ($iterator as $file) {
-                if ($file->isFile() && $file->getExtension() === 'php') {
-                    $relativePath = str_replace($configPath.DIRECTORY_SEPARATOR, '', $file->getPathname());
-                    $configKey = $this->nameLower.'.'.str_replace([DIRECTORY_SEPARATOR, '.php'], ['.', ''], $relativePath);
-                    $key = ($relativePath === 'config.php') ? $this->nameLower : $configKey;
-
-                    $this->publishes([$file->getPathname() => config_path($relativePath)], 'config');
-                    $this->mergeConfigFrom($file->getPathname(), $key);
-                }
-            }
         }
     }
 
@@ -124,6 +83,49 @@ class BlogServiceProvider extends ServiceProvider
     public function provides(): array
     {
         return [];
+    }
+
+    /**
+     * Register commands in the format of Command::class
+     */
+    protected function registerCommands(): void
+    {
+        // $this->commands([]);
+    }
+
+    /**
+     * Register command Schedules.
+     */
+    protected function registerCommandSchedules(): void
+    {
+        // $this->app->booted(function () {
+        //     $schedule = $this->app->make(Schedule::class);
+        //     $schedule->command('inspire')->hourly();
+        // });
+    }
+
+    /**
+     * Register config.
+     */
+    protected function registerConfig(): void
+    {
+        $relativeConfigPath = config('modules.paths.generator.config.path');
+        $configPath = module_path($this->name, $relativeConfigPath);
+
+        if (is_dir($configPath)) {
+            $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($configPath));
+
+            foreach ($iterator as $file) {
+                if ($file->isFile() && $file->getExtension() === 'php') {
+                    $relativePath = str_replace($configPath.DIRECTORY_SEPARATOR, '', $file->getPathname());
+                    $configKey = $this->nameLower.'.'.str_replace([DIRECTORY_SEPARATOR, '.php'], ['.', ''], $relativePath);
+                    $key = ($relativePath === 'config.php') ? $this->nameLower : $configKey;
+
+                    $this->publishes([$file->getPathname() => config_path($relativePath)], 'config');
+                    $this->mergeConfigFrom($file->getPathname(), $key);
+                }
+            }
+        }
     }
 
     private function getPublishableViewPaths(): array
