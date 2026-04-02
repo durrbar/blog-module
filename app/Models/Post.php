@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Modules\Blog\Models;
 
 use App\Models\Image;
@@ -12,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Leshkens\LaravelReadTime\Traits\HasReadTime;
+use Modules\Blog\Enums\PostPublishStatus;
 use Modules\Comment\Models\Comment;
 use Modules\User\Models\User;
 use Spatie\Searchable\Searchable;
@@ -22,7 +25,7 @@ use Spatie\Tags\HasTags;
 
 // use Modules\Blog\Database\Factories\PostFactory;
 
-class Post extends Model implements Searchable
+final class Post extends Model implements Searchable
 {
     use HasFactory;
     use HasReadTime;
@@ -60,6 +63,7 @@ class Post extends Model implements Searchable
     // }
 
     protected $casts = [
+        'publish' => PostPublishStatus::class,
         'meta_keywords' => 'array', // Automatically casts to/from JSON
     ];
 
@@ -68,20 +72,11 @@ class Post extends Model implements Searchable
         return Tag::class;
     }
 
-    protected function readTime(): array
-    {
-        return [
-            'source' => 'content',
-
-            'localable' => true,
-        ];
-    }
-
     public function getSearchResult(): SearchResult
     {
         $url = route('api.posts.show', $this->slug);
 
-        return new \Spatie\Searchable\SearchResult(
+        return new SearchResult(
             $this,
             $this->title,
             $url
@@ -131,5 +126,14 @@ class Post extends Model implements Searchable
         return $this
             ->morphToMany(self::getTagClassName(), 'taggable', 'taggables', null, 'tag_id')
             ->orderBy('order_column');
+    }
+
+    protected function readTime(): array
+    {
+        return [
+            'source' => 'content',
+
+            'localable' => true,
+        ];
     }
 }

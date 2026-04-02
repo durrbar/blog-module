@@ -1,20 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Modules\Blog\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rules\Enum;
+use Modules\Blog\Enums\PostPublishStatus;
 
-class PostRequest extends FormRequest
+final class PostRequest extends FormRequest
 {
     /**
      * Get the validation rules that apply to the request.
      */
     public function rules(): array
     {
-        if (request()->isMethod('post')) {
+        if ($this->isMethod('post')) {
             return [
                 'title' => 'required|string|max:255',  // Title is nullable
-                'publish' => 'required|string|in:draft,published',  // Publish status is nullable, can be 'draft' or 'published'
+                'publish' => ['required', 'string', new Enum(PostPublishStatus::class)],  // Publish status is nullable, can be 'draft' or 'published'
                 'featured' => 'boolean',  // Boolean field
                 'content' => 'required|string',  // Content is nullable
                 'description' => 'required|string',  // nullable description
@@ -51,7 +55,7 @@ class PostRequest extends FormRequest
         } else {
             return [
                 'title' => 'nullable|string|max:255',  // Title is nullable
-                'publish' => 'nullable|string|in:draft,published',  // Publish status nullable
+                'publish' => ['nullable', 'string', new Enum(PostPublishStatus::class)],  // Publish status nullable
                 'featured' => 'boolean',  // Boolean field
                 'content' => 'nullable',  // Content is nullable
                 'description' => 'nullable|string',  // nullable description
@@ -90,23 +94,6 @@ class PostRequest extends FormRequest
     }
 
     /**
-     * Prepare the data for validation.
-     */
-    protected function prepareForValidation(): void
-    {
-        $this->merge([
-            // 'cover'            => $this->coverUrl,
-            'author_id' => $this->authorId,
-            'meta_title' => $this->metaTitle,
-            'total_views' => $this->totalViews,
-            'total_shares' => $this->totalShares,
-            'meta_keywords' => $this->metaKeywords,
-            'total_favorites' => $this->totalFavorites,
-            'meta_description' => $this->metaDescription,
-        ]);
-    }
-
-    /**
      * Get the error messages for the defined validation rules.
      *
      * @return array<string, string>
@@ -124,5 +111,22 @@ class PostRequest extends FormRequest
     public function authorize(): bool
     {
         return true;
+    }
+
+    /**
+     * Prepare the data for validation.
+     */
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            // 'cover'            => $this->coverUrl,
+            'author_id' => $this->authorId,
+            'meta_title' => $this->metaTitle,
+            'total_views' => $this->totalViews,
+            'total_shares' => $this->totalShares,
+            'meta_keywords' => $this->metaKeywords,
+            'total_favorites' => $this->totalFavorites,
+            'meta_description' => $this->metaDescription,
+        ]);
     }
 }

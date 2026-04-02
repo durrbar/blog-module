@@ -1,13 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Modules\Blog\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Exception;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cache;
+use Modules\Blog\Enums\PostPublishStatus;
 use Modules\Blog\Http\Controllers\Traits\HandlesPostOperations;
 use Modules\Blog\Models\Post;
 use Modules\Blog\Resources\PostCollection;
@@ -16,7 +20,7 @@ use Spatie\QueryBuilder\QueryBuilder;
 use Spatie\Searchable\ModelSearchAspect;
 use Spatie\Searchable\Search;
 
-class PostController extends Controller
+final class PostController extends Controller
 {
     use AuthorizesRequests;
     use HandlesPostOperations;
@@ -32,7 +36,7 @@ class PostController extends Controller
         $posts = Cache::remember($cacheKey, $cacheDuration, function () {
             return QueryBuilder::for(Post::class)
                 ->allowedFields('id', 'slug', 'title', 'author_id', 'created_at', 'total_views', 'total_shares')
-                ->with(['author', 'cover'])->where('publish', 'published')->paginate(10);
+                ->with(['author', 'cover'])->where('publish', PostPublishStatus::Published->value)->paginate(10);
         });
 
         return response()->json(['posts' => new PostCollection($posts)]);
@@ -68,7 +72,7 @@ class PostController extends Controller
             });
 
             return response()->json(['featureds' => PostResource::collection($featureds)], Response::HTTP_OK);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $this->handleError(self::ERROR_FEATURED.': '.$e->getMessage(), null);
         }
     }
@@ -98,7 +102,7 @@ class PostController extends Controller
             });
 
             return response()->json(['latest' => PostResource::collection($latest)], Response::HTTP_OK);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $this->handleError(self::ERROR_LATEST.': '.$e->getMessage(), null);
         }
     }

@@ -1,14 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Modules\Blog\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Modules\Blog\Enums\PostPublishStatus;
 use Modules\Comment\Http\Resources\CommentCollection;
 use Modules\Tag\Resources\TagResource;
 use Modules\User\Resources\UserResource;
 
-class PostResource extends JsonResource
+final class PostResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -19,7 +22,7 @@ class PostResource extends JsonResource
             'id' => $this->id,
             'title' => $this->title,
             'slug' => $this->slug,
-            'publish' => $this->publish,
+            'publish' => $this->publish instanceof PostPublishStatus ? $this->publish->value : $this->publish,
             'featured' => $this->featured,
             'content' => $this->content,
             'authorId' => $this->author_id,
