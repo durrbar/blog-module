@@ -123,11 +123,12 @@ class Post extends Model implements Searchable
     // {
     //     // return PostFactory::new();
     // }
+    
     protected function casts(): array
     {
         return [
             'publish' => PostPublishStatus::class,
-            'meta_keywords' => 'array', // Automatically casts to/from JSON
+            'meta_keywords' => 'array',
         ];
     }
 

@@ -13,14 +13,6 @@ class PostPolicy
     use HandlesAuthorization;
 
     /**
-     * Create a new policy instance.
-     */
-    public function __construct()
-    {
-        //
-    }
-
-    /**
      * Determine if the user can view any posts.
      */
     public function viewAny(User $user): bool
@@ -49,7 +41,7 @@ class PostPolicy
      */
     public function update(User $user, Post $post): bool
     {
-        return $user->can('blog.posts.*') || $user->can('blog.posts.edit') || $user->id === $post->user_id;
+        return $user->can('blog.posts.*') || $user->can('blog.posts.edit') || $user->id === $post->author_id;
     }
 
     /**
@@ -57,7 +49,7 @@ class PostPolicy
      */
     public function delete(User $user, Post $post): bool
     {
-        return $user->can('blog.posts.*') || $user->can('blog.posts.delete') || $user->id === $post->user_id;
+        return $user->can('blog.posts.*') || $user->can('blog.posts.delete') || $user->id === $post->author_id;
     }
 
     /**

@@ -6,7 +6,7 @@ namespace Modules\Blog\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Exception;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -15,6 +15,7 @@ use Modules\Blog\Enums\PostPublishStatus;
 use Modules\Blog\Http\Controllers\Traits\HandlesPostOperations;
 use Modules\Blog\Models\Post;
 use Modules\Blog\Resources\PostCollection;
+use Modules\Blog\Resources\PostJsonApiResource;
 use Modules\Blog\Resources\PostResource;
 use Spatie\QueryBuilder\QueryBuilder;
 use Spatie\Searchable\ModelSearchAspect;
@@ -22,24 +23,23 @@ use Spatie\Searchable\Search;
 
 class PostController extends Controller
 {
-    use AuthorizesRequests;
     use HandlesPostOperations;
 
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request): JsonResponse
+    public function index(Request $request)
     {
-        $cacheKey = self::CACHE_PUBLIC_POSTS.$request->query('page', 1);
+        $cacheKey = self::CACHE_PUBLIC_POSTS.$request->integer('page', 1);
         $cacheDuration = now()->addMinutes(config('cache.duration'));
 
-        $posts = Cache::remember($cacheKey, $cacheDuration, function () {
-            return QueryBuilder::for(Post::class)
-                ->allowedFields('id', 'slug', 'title', 'author_id', 'created_at', 'total_views', 'total_shares')
-                ->with(['author', 'cover'])->where('publish', PostPublishStatus::Published->value)->paginate(10);
-        });
+        $posts = Cache::remember($cacheKey, $cacheDuration, static fn () => QueryBuilder::for(Post::class)
+            ->allowedFields('id', 'slug', 'title', 'author_id', 'created_at', 'total_views', 'total_shares')
+            ->with(['author', 'cover'])
+            ->where('publish', PostPublishStatus::Published->value)
+            ->paginate(10));
 
-        return response()->json(['posts' => new PostCollection($posts)]);
+        return PostJsonApiResource::collection($posts);
     }
 
     /**
@@ -50,26 +50,21 @@ class PostController extends Controller
         $cacheKey = "post_{$post->id}";
         $cacheDuration = now()->addMinutes(config('cache.duration'));
 
-        $post = Cache::remember($cacheKey, $cacheDuration, function () use ($post) {
-            return $this->loadPostRelations($post);
-        });
+        $post = Cache::remember($cacheKey, $cacheDuration, fn () => $this->loadPostRelations($post));
 
-        return response()->json(['post' => new PostResource($post)]);
+        return response()->json(['post' => new PostResource($post)], Response::HTTP_OK);
     }
 
     public function featured(): JsonResponse
     {
         try {
-            $featureds = Cache::remember(self::CACHE_FEATURED_POSTS, now()->addMinutes(config('cache.duration')), function () {
-                return Post::where('featured', 1)
-                    ->select('id', 'slug', 'title', 'author_id', 'created_at', 'total_views', 'total_shares')
-                    ->with(['author', 'cover'])
-                    ->withCount(['comments' => function ($query): void {
-                        $query->whereNull('parent_id');
-                    }])
-                    ->limit(5)
-                    ->get();
-            });
+            $featureds = Cache::remember(self::CACHE_FEATURED_POSTS, now()->addMinutes(config('cache.duration')), static fn () => Post::query()
+                ->where('featured', true)
+                ->select('id', 'slug', 'title', 'author_id', 'created_at', 'total_views', 'total_shares')
+                ->with(['author', 'cover'])
+                ->withCount(['comments' => fn (Builder $query) => $query->whereNull('parent_id')])
+                ->limit(5)
+                ->get());
 
             return response()->json(['featureds' => PostResource::collection($featureds)], Response::HTTP_OK);
         } catch (Exception $e) {
@@ -80,8 +75,8 @@ class PostController extends Controller
     public function latest(): JsonResponse
     {
         try {
-            $latest = Cache::remember(self::CACHE_LATEST_POSTS, now()->addMinutes(config('cache.duration')), function () {
-                return Post::select(
+            $latest = Cache::remember(self::CACHE_LATEST_POSTS, now()->addMinutes(config('cache.duration')), static fn () => Post::query()
+                ->select(
                     'id',
                     'slug',
                     'title',
@@ -92,14 +87,11 @@ class PostController extends Controller
                     'total_shares',
                     'description'
                 )
-                    ->with(['author', 'cover'])
-                    ->withCount(['comments' => function ($query): void {
-                        $query->whereNull('parent_id');
-                    }])
-                    ->orderBy('created_at', 'desc')
-                    ->limit(5)
-                    ->get();
-            });
+                ->with(['author', 'cover'])
+                ->withCount(['comments' => fn (Builder $query) => $query->whereNull('parent_id')])
+                ->latest('created_at')
+                ->limit(5)
+                ->get());
 
             return response()->json(['latest' => PostResource::collection($latest)], Response::HTTP_OK);
         } catch (Exception $e) {
@@ -109,18 +101,22 @@ class PostController extends Controller
 
     public function search(Request $request): JsonResponse
     {
-        $query = $request->query('query');
+        $query = $request->string('query')->trim()->toString();
 
-        // Perform the search and register the Post model with searchable attributes
+        if ($query === '') {
+            return response()->json(['results' => []], Response::HTTP_OK);
+        }
+
         $results = (new Search())
-            ->registerModel(Post::class, function (ModelSearchAspect $modelSearchAspect): void {
+            ->registerModel(Post::class, static function (ModelSearchAspect $modelSearchAspect): void {
                 $modelSearchAspect
                     ->addSearchableAttribute('title')
-                    ->with('cover'); // Eager load the cover relationship
+                    ->with('cover');
             })
             ->search($query);
 
-        // Use PostResource to format the search results consistently
-        return response()->json(['results' => PostResource::collection(collect($results)->pluck('searchable'))]);
+        return response()->json([
+            'results' => PostResource::collection(collect($results)->pluck('searchable')),
+        ], Response::HTTP_OK);
     }
 }

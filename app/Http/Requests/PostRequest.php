@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Modules\Blog\Http\Requests;
 
+use Closure;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Validation\Rules\Enum;
 use Modules\Blog\Enums\PostPublishStatus;
 
@@ -15,82 +17,82 @@ class PostRequest extends FormRequest
      */
     public function rules(): array
     {
-        if ($this->isMethod('post')) {
-            return [
-                'title' => 'required|string|max:255',  // Title is nullable
-                'publish' => ['required', 'string', new Enum(PostPublishStatus::class)],  // Publish status is nullable, can be 'draft' or 'published'
-                'featured' => 'boolean',  // Boolean field
-                'content' => 'required|string',  // Content is nullable
-                'description' => 'required|string',  // nullable description
+        $isCreate = $this->isMethod('post');
 
-                'coverUrl' => [
-                    'required',
-                    function ($attribute, $value, $fail): void {
-                        // Check if coverUrl is a file
-                        if ($this->hasFile('coverUrl')) {
-                            $file = $this->file('coverUrl');
-                            if (! $file->isValid() || ! in_array($file->extension(), ['jpeg', 'png', 'jpg', 'gif', 'webp'])) {
-                                $fail('The cover image must be a valid image file (jpeg, png, jpg, gif, webp).');
-                            } elseif ($file->getSize() > 2048 * 1024) {
-                                $fail('The cover image file size must not exceed 2MB.');
-                            }
-                        }
-                        // If it's not a file, check if it's a valid URL
-                        elseif (is_string($value)) {
-                            if (! filter_var($value, FILTER_VALIDATE_URL)) {
-                                $fail('The cover image URL hfth is not valid.');
-                            }
-                        }
-                    },
-                ],
+        return [
+            ...$this->baseRules(),
+            ...$this->contentRules($isCreate),
+            ...$this->metaRules($isCreate),
+        ];
+    }
 
-                'tags' => 'nullable|array', // Ensure it's an array
-                'tags.*' => 'string', // Each tag should be a string
+    /**
+     * Shared rules for create and update.
+     */
+    private function baseRules(): array
+    {
+        return [
+            'featured' => 'boolean',
+            'duration' => 'nullable|string|max:255',
+            'coverUrl' => ['required', $this->coverUrlValidationRule()],
+            'tags' => 'nullable|array',
+            'tags.*' => 'string',
+            'meta_keywords' => 'nullable|array',
+            'meta_keywords.*' => 'nullable|string|max:255',
+        ];
+    }
 
-                'meta_title' => 'required|string|max:255',  // Meta title is nullable
-                'meta_keywords' => 'nullable|array',  // JSON as an array in the request
-                'meta_keywords.*' => 'nullable|string|max:255',  // Each keyword should be a string
-                'meta_description' => 'required|string|max:255',  // Meta description is nullable
-            ];
-        } else {
-            return [
-                'title' => 'nullable|string|max:255',  // Title is nullable
-                'publish' => ['nullable', 'string', new Enum(PostPublishStatus::class)],  // Publish status nullable
-                'featured' => 'boolean',  // Boolean field
-                'content' => 'nullable',  // Content is nullable
-                'description' => 'nullable|string',  // nullable description
-                'duration' => 'nullable|string|max:255',  // nullable duration
+    /**
+     * Rules that differ between create and update.
+     */
+    private function contentRules(bool $isCreate): array
+    {
+        return [
+            'title' => $isCreate ? 'required|string|max:255' : 'nullable|string|max:255',
+            'publish' => [$isCreate ? 'required' : 'nullable', 'string', new Enum(PostPublishStatus::class)],
+            'content' => $isCreate ? 'required|string' : 'nullable',
+            'description' => $isCreate ? 'required|string' : 'nullable|string',
+        ];
+    }
 
-                'coverUrl' => [
-                    'required',
-                    function ($attribute, $value, $fail): void {
-                        // Check if coverUrl is a file
-                        if ($this->hasFile('coverUrl')) {
-                            $file = $this->file('coverUrl');
-                            if (! $file->isValid() || ! in_array($file->extension(), ['jpeg', 'png', 'jpg', 'gif', 'webp'])) {
-                                $fail('The cover image must be a valid image file (jpeg, png, jpg, gif, webp).');
-                            } elseif ($file->getSize() > 2048 * 1024) {
-                                $fail('The cover image file size must not exceed 2MB.');
-                            }
-                        }
-                        // If it's not a file, check if it's a valid URL
-                        elseif (is_string($value)) {
-                            if (! filter_var($value, FILTER_VALIDATE_URL)) {
-                                $fail('The cover image URL gftg is not valid.');
-                            }
-                        }
-                    },
-                ],
+    /**
+     * Meta rules that differ between create and update.
+     */
+    private function metaRules(bool $isCreate): array
+    {
+        return [
+            'meta_title' => $isCreate ? 'required|string|max:255' : 'nullable|string|max:255',
+            'meta_description' => $isCreate ? 'required|string|max:255' : 'nullable|string|max:255',
+        ];
+    }
 
-                'tags' => 'nullable|array', // Ensure it's an array
-                'tags.*' => 'string', // Each tag should be a string
+    /**
+     * Custom cover validation to support either uploaded file or URL.
+     */
+    private function coverUrlValidationRule(): Closure
+    {
+        return function (string $attribute, mixed $value, Closure $fail): void {
+            if ($this->hasFile('coverUrl')) {
+                /** @var UploadedFile $file */
+                $file = $this->file('coverUrl');
 
-                'meta_title' => 'nullable|string|max:255',  // Meta title is nullable
-                'meta_keywords' => 'nullable|array',  // JSON as an array in the request
-                'meta_keywords.*' => 'nullable|string|max:255',  // Each keyword should be a string
-                'meta_description' => 'nullable|string|max:255',  // Meta description is nullable
-            ];
-        }
+                if (! $file->isValid() || ! in_array($file->extension(), ['jpeg', 'png', 'jpg', 'gif', 'webp'], true)) {
+                    $fail('The cover image must be a valid image file (jpeg, png, jpg, gif, webp).');
+
+                    return;
+                }
+
+                if ($file->getSize() > 2048 * 1024) {
+                    $fail('The cover image file size must not exceed 2MB.');
+                }
+
+                return;
+            }
+
+            if (is_string($value) && ! filter_var($value, FILTER_VALIDATE_URL)) {
+                $fail('The cover image URL is not valid.');
+            }
+        };
     }
 
     /**
@@ -119,7 +121,6 @@ class PostRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $this->merge([
-            // 'cover'            => $this->coverUrl,
             'author_id' => $this->authorId,
             'meta_title' => $this->metaTitle,
             'total_views' => $this->totalViews,

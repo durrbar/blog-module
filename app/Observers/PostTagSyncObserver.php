@@ -18,9 +18,13 @@ class PostTagSyncObserver
         $this->syncTags($post);
     }
 
-    private function syncTags(Post $post)
+    private function syncTags(Post $post): void
     {
-        $tags = request()->input('tags', []); // Access tags from request
+        if (! request()->has('tags')) {
+            return;
+        }
+
+        $tags = request()->input('tags', []);
         $post->syncTags($tags);
     }
 }

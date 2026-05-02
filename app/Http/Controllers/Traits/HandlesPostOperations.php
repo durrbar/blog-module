@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Modules\Blog\Http\Controllers\Traits;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -11,8 +12,8 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Modules\Blog\Models\Post;
-use Modules\Common\Facades\ErrorHelper;
-use Modules\Common\Facades\FileHelper;
+use Modules\Core\Facades\ErrorHelper;
+use Modules\Core\Facades\FileHelper;
 
 trait HandlesPostOperations
 {
@@ -24,7 +25,6 @@ trait HandlesPostOperations
 
     protected const CACHE_LATEST_POSTS = 'api.v1.posts.latest';
 
-    // Error messages
     protected const ERROR_CREATE = 'Failed to create post';
 
     protected const ERROR_UPDATE = 'Failed to update post';
@@ -37,7 +37,7 @@ trait HandlesPostOperations
 
     protected function handleCoverImage(Post $post, Request $request): void
     {
-        if ($request->hasFile('coverUrl') || $request->input('coverUrl')) {
+        if ($request->hasFile('coverUrl') || $request->filled('coverUrl')) {
             $this->processCoverImage($post, $request);
         }
     }
@@ -50,36 +50,23 @@ trait HandlesPostOperations
         }
     }
 
-    /**
-     * Handle error responses.
-     *
-     * @param  string  $message  The error message to be logged and returned in the response.
-     * @param  Request|null  $request  The HTTP request that triggered the error, if available.
-     * @param  int  $statusCode  The HTTP status code for the response (default is 500).
-     * @return JsonResponse A JSON response containing the success status and error message.
-     */
     protected function handleError(string $message, ?Request $request = null, int $statusCode = Response::HTTP_INTERNAL_SERVER_ERROR): JsonResponse
     {
-        // Use the ErrorHelper facade for error handling
         return ErrorHelper::handleError($message, $request, $statusCode);
     }
 
-    private function loadPostRelations(Post $post): Post
+    protected function loadPostRelations(Post $post): Post
     {
         return $post->load(['author', 'cover', 'tags'])
-            ->loadCount(['comments' => fn ($q) => $q->whereNull('parent_id')]);
+            ->loadCount(['comments' => fn (Builder $query) => $query->whereNull('parent_id')]);
     }
 
-    private function processCoverImage(Post $post, Request $request): void
+    protected function processCoverImage(Post $post, Request $request): void
     {
-        // Get the existing cover path
         $existingCover = $post->cover?->path;
-
-        // Get the incoming cover URL (string) or file (UploadedFile)
         $incomingCover = $request->input('coverUrl');
         $incomingFile = $request->file('coverUrl');
 
-        // If the incoming cover is the same as the existing one, do nothing
         if (is_string($incomingCover) && $incomingCover === $existingCover) {
             return;
         }
@@ -96,20 +83,16 @@ trait HandlesPostOperations
 
         if ($incomingFile instanceof UploadedFile) {
             $path = FileHelper::setFile($incomingFile)
-                ->setPath('uploads/post/cover') // Set the specific path for product images
+                ->setPath('uploads/post/cover')
                 ->generateUniqueFileName()
                 ->setHeight(1080)
                 ->upload()->getPath();
 
-            // Only save the path in DB if upload is successful
             $post->cover()->updateOrCreate([], ['path' => $path]);
         }
     }
 
-    /**
-     * Clear the relevant post cache.
-     */
-    private function clearPostCache(): void
+    protected function clearPostCache(): void
     {
         Cache::forget(self::CACHE_PUBLIC_POSTS.'*');
         Cache::forget(self::CACHE_ADMIN_POSTS.'*');
