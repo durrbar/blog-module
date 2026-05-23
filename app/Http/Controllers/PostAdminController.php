@@ -18,6 +18,7 @@ use Modules\Blog\Http\Controllers\Traits\HandlesPostOperations;
 use Modules\Blog\Http\Requests\PostRequest;
 use Modules\Blog\Models\Post;
 use Modules\Blog\Resources\PostCollection;
+use Modules\Blog\Resources\PostJsonApiResource;
 use Modules\Blog\Resources\PostResource;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -36,7 +37,7 @@ class PostAdminController extends Controller
         $cacheDuration = now()->addMinutes(config('cache.duration'));
 
         $posts = Cache::remember($cacheKey, $cacheDuration, static fn () => QueryBuilder::for(Post::class)
-            ->allowedFields(['id', 'slug', 'title', 'author_id', 'created_at', 'total_views', 'total_shares'])
+            ->allowedFields('id', 'slug', 'title', 'author_id', 'created_at', 'total_views', 'total_shares')
             ->with(['author', 'cover', 'tags'])
             ->allowedFilters([AllowedFilter::exact('publish')])
             ->allowedSorts('created_at')
@@ -49,7 +50,7 @@ class PostAdminController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(PostRequest $request): JsonResponse
+    public function store(PostRequest $request)
     {
         try {
             $this->authorize('create', Post::class);
@@ -70,7 +71,7 @@ class PostAdminController extends Controller
 
             $this->clearPostCache();
 
-            return response()->json(['post' => new PostResource($post)], Response::HTTP_CREATED);
+            return new PostJsonApiResource($post);
         } catch (Exception $e) {
             return $this->handleError(self::ERROR_CREATE.': '.$e->getMessage(), $request);
         }

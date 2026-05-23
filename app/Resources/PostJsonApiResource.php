@@ -7,9 +7,9 @@ namespace Modules\Blog\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\JsonApi\JsonApiResource;
 use Modules\Blog\Enums\PostPublishStatus;
-use Modules\Comment\Http\Resources\CommentResource;
+use Modules\Comment\Http\Resources\CommentJsonApiResource;
 use Modules\Tag\Resources\TagResource;
-use Modules\User\Resources\UserResource;
+use Modules\User\Resources\UserJsonApiResource;
 
 class PostJsonApiResource extends JsonApiResource
 {
@@ -39,12 +39,14 @@ class PostJsonApiResource extends JsonApiResource
     /**
      * The resource's relationships.
      */
-    public $relationships = [
-        'author' => UserResource::class,
-        'comments' => CommentResource::class,
-        'tags' => TagResource::class,
-        'cover',
-    ];
+    public function toRelationships(Request $request): array { 
+        return [
+            'author' => UserJsonApiResource::class,
+            'comments' => CommentJsonApiResource::class,
+            'tags' => TagResource::class,
+            'cover',
+        ];
+    }
 
     /**
      * Get the resource's type.

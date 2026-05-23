@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Modules\Blog\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Dedoc\Scramble\Attributes\QueryParameter;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -25,19 +26,17 @@ class PostController extends Controller
 {
     use HandlesPostOperations;
 
-    /**
-     * Display a listing of the resource.
-     */
+    #[QueryParameter('page', description: 'Page number', type: 'integer', example: 1)]
     public function index(Request $request)
     {
         $cacheKey = self::CACHE_PUBLIC_POSTS.$request->integer('page', 1);
-        $cacheDuration = now()->addMinutes(config('cache.duration'));
 
-        $posts = Cache::remember($cacheKey, $cacheDuration, static fn () => QueryBuilder::for(Post::class)
+        $posts = Cache::remember($cacheKey, CACHE_DURATION, static fn () => QueryBuilder::for(Post::class)
             ->allowedFields('id', 'slug', 'title', 'author_id', 'created_at', 'total_views', 'total_shares')
             ->with(['author', 'cover'])
             ->where('publish', PostPublishStatus::Published->value)
-            ->paginate(10));
+            ->paginate(10))
+            ->appends(request()->query());
 
         return PostJsonApiResource::collection($posts);
     }
@@ -48,9 +47,8 @@ class PostController extends Controller
     public function show(Post $post): JsonResponse
     {
         $cacheKey = "post_{$post->id}";
-        $cacheDuration = now()->addMinutes(config('cache.duration'));
 
-        $post = Cache::remember($cacheKey, $cacheDuration, fn () => $this->loadPostRelations($post));
+        $post = Cache::remember($cacheKey, CACHE_DURATION, fn () => $this->loadPostRelations($post));
 
         return response()->json(['post' => new PostResource($post)], Response::HTTP_OK);
     }
