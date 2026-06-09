@@ -27,13 +27,49 @@ class PostRequest extends FormRequest
     }
 
     /**
+     * Get the error messages for the defined validation rules.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'coverUrl.required' => 'Cover image is required',
+        ];
+    }
+
+    /**
+     * Determine if the user is authorized to make this request.
+     */
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    /**
+     * Prepare the data for validation.
+     */
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'author_id' => $this->authorId,
+            'meta_title' => $this->metaTitle,
+            'total_views' => $this->totalViews,
+            'total_shares' => $this->totalShares,
+            'meta_keywords' => $this->metaKeywords,
+            'total_favorites' => $this->totalFavorites,
+            'meta_description' => $this->metaDescription,
+        ]);
+    }
+
+    /**
      * Shared rules for create and update.
      */
     private function baseRules(): array
     {
         return [
             'featured' => 'boolean',
-            'duration' => 'nullable|string|max:255',
+            // 'duration' => 'nullable|string|max:255',
             'coverUrl' => ['required', $this->coverUrlValidationRule()],
             'tags' => 'nullable|array',
             'tags.*' => 'string',
@@ -93,41 +129,5 @@ class PostRequest extends FormRequest
                 $fail('The cover image URL is not valid.');
             }
         };
-    }
-
-    /**
-     * Get the error messages for the defined validation rules.
-     *
-     * @return array<string, string>
-     */
-    public function messages(): array
-    {
-        return [
-            'coverUrl.required' => 'Cover image is required',
-        ];
-    }
-
-    /**
-     * Determine if the user is authorized to make this request.
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
-
-    /**
-     * Prepare the data for validation.
-     */
-    protected function prepareForValidation(): void
-    {
-        $this->merge([
-            'author_id' => $this->authorId,
-            'meta_title' => $this->metaTitle,
-            'total_views' => $this->totalViews,
-            'total_shares' => $this->totalShares,
-            'meta_keywords' => $this->metaKeywords,
-            'total_favorites' => $this->totalFavorites,
-            'meta_description' => $this->metaDescription,
-        ]);
     }
 }

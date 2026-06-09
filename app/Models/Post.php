@@ -7,6 +7,7 @@ namespace Modules\Blog\Models;
 use App\Models\Image;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
+use Illuminate\Database\Eloquent\Attributes\UseFactory;
 use Illuminate\Database\Eloquent\Attributes\UsePolicy;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -17,6 +18,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Leshkens\LaravelReadTime\Traits\HasReadTime;
+use Modules\Blog\Database\Factories\PostFactory;
 use Modules\Blog\Enums\PostPublishStatus;
 use Modules\Blog\Policies\PostPolicy;
 use Modules\Comment\Models\Comment;
@@ -27,14 +29,11 @@ use Spatie\Sluggable\HasSlug;
 use Spatie\Sluggable\SlugOptions;
 use Spatie\Tags\HasTags;
 
-// use Modules\Blog\Database\Factories\PostFactory;
-
 #[Table('posts')]
 #[Fillable([
     'title',
     'publish',
     'content',
-    'cover_url',
     'author_id',
     'meta_title',
     'total_views',
@@ -45,6 +44,7 @@ use Spatie\Tags\HasTags;
     'meta_description',
 ])]
 #[UsePolicy(PostPolicy::class)]
+#[UseFactory(PostFactory::class)]
 class Post extends Model implements Searchable
 {
     use HasFactory;
@@ -111,24 +111,19 @@ class Post extends Model implements Searchable
     public function tags(): MorphToMany
     {
         return $this
-            ->morphToMany(self::getTagClassName(), 'taggable', 'taggables', null, 'tag_id')
+            ->morphToMany(self::getTagClassName(), 'taggable', 'old_taggables', null, 'old_tag_id')
             ->orderBy('order_column');
     }
 
     /**
      * The table associated with the model.
      */
-
-    // protected static function newFactory(): PostFactory
-    // {
-    //     // return PostFactory::new();
-    // }
-    
     protected function casts(): array
     {
         return [
             'publish' => PostPublishStatus::class,
             'meta_keywords' => 'array',
+            'featured' => 'boolean',
         ];
     }
 

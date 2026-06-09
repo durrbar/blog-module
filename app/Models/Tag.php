@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Spatie\Tags\Tag as TagsTag;
 
-#[Table('tags')]
+#[Table('old_tags')]
 class Tag extends TagsTag
 {
     use HasUuids;
@@ -23,6 +23,6 @@ class Tag extends TagsTag
      */
     public function posts(): MorphToMany
     {
-        return $this->morphedByMany(Post::class, 'taggable');
+        return $this->morphedByMany(Post::class, 'taggable', 'old_taggables');
     }
 }

@@ -15,8 +15,8 @@ use Illuminate\Support\Facades\Cache;
 use Modules\Blog\Enums\PostPublishStatus;
 use Modules\Blog\Http\Controllers\Traits\HandlesPostOperations;
 use Modules\Blog\Models\Post;
+use Modules\Blog\Resources\FeaturedPostResource;
 use Modules\Blog\Resources\PostCollection;
-use Modules\Blog\Resources\PostJsonApiResource;
 use Modules\Blog\Resources\PostResource;
 use Spatie\QueryBuilder\QueryBuilder;
 use Spatie\Searchable\ModelSearchAspect;
@@ -27,7 +27,7 @@ class PostController extends Controller
     use HandlesPostOperations;
 
     #[QueryParameter('page', description: 'Page number', type: 'integer', example: 1)]
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
         $cacheKey = self::CACHE_PUBLIC_POSTS.$request->integer('page', 1);
 
@@ -38,7 +38,7 @@ class PostController extends Controller
             ->paginate(10))
             ->appends(request()->query());
 
-        return PostJsonApiResource::collection($posts);
+        return response()->json(['posts' => new PostCollection($posts)]);
     }
 
     /**
@@ -64,7 +64,7 @@ class PostController extends Controller
                 ->limit(5)
                 ->get());
 
-            return response()->json(['featureds' => PostResource::collection($featureds)], Response::HTTP_OK);
+            return response()->json(['featureds' => FeaturedPostResource::collection($featureds)], Response::HTTP_OK);
         } catch (Exception $e) {
             return $this->handleError(self::ERROR_FEATURED.': '.$e->getMessage(), null);
         }
@@ -91,7 +91,7 @@ class PostController extends Controller
                 ->limit(5)
                 ->get());
 
-            return response()->json(['latest' => PostResource::collection($latest)], Response::HTTP_OK);
+            return response()->json(['latest' => FeaturedPostResource::collection($latest)], Response::HTTP_OK);
         } catch (Exception $e) {
             return $this->handleError(self::ERROR_LATEST.': '.$e->getMessage(), null);
         }

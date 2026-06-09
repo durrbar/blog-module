@@ -35,10 +35,10 @@ trait HandlesPostOperations
 
     protected const ERROR_LATEST = 'Failed to retrieve latest posts';
 
-    protected function handleCoverImage(Post $post, Request $request): void
+    protected function handleCoverImage(Post $post, array $validatedData): void
     {
-        if ($request->hasFile('coverUrl') || $request->filled('coverUrl')) {
-            $this->processCoverImage($post, $request);
+        if (array_key_exists('coverUrl', $validatedData) && ! empty($validatedData['coverUrl'])) {
+            $this->processCoverImage($post, $validatedData);
         }
     }
 
@@ -61,11 +61,10 @@ trait HandlesPostOperations
             ->loadCount(['comments' => fn (Builder $query) => $query->whereNull('parent_id')]);
     }
 
-    protected function processCoverImage(Post $post, Request $request): void
+    protected function processCoverImage(Post $post, array $validatedData): void
     {
         $existingCover = $post->cover?->path;
-        $incomingCover = $request->input('coverUrl');
-        $incomingFile = $request->file('coverUrl');
+        $incomingCover = $validatedData['coverUrl'];
 
         if (is_string($incomingCover) && $incomingCover === $existingCover) {
             return;
@@ -81,12 +80,13 @@ trait HandlesPostOperations
             return;
         }
 
-        if ($incomingFile instanceof UploadedFile) {
-            $path = FileHelper::setFile($incomingFile)
+        if ($incomingCover instanceof UploadedFile) {
+            $path = FileHelper::setFile($incomingCover)
                 ->setPath('uploads/post/cover')
                 ->generateUniqueFileName()
                 ->setHeight(1080)
-                ->upload()->getPath();
+                ->upload()
+                ->getPath();
 
             $post->cover()->updateOrCreate([], ['path' => $path]);
         }

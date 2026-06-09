@@ -13,7 +13,7 @@ class PostTagSyncObserver
         $this->syncTags($post);
     }
 
-    public function updating(Post $post): void
+    public function updated(Post $post): void
     {
         $this->syncTags($post);
     }
