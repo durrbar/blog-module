@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Modules\User\Resources\UserResource;
 
-class FeaturedPostResource extends JsonResource
+class CommonPostResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
@@ -21,7 +21,7 @@ class FeaturedPostResource extends JsonResource
             'totalViews' => $this->total_views,
             'totalShares' => $this->total_shares,
             'totalComments' => $this->whenCounted('comments'),
-            'coverUrl' => $this->whenLoaded('cover', fn () => $this->cover?->url),
+            'coverUrl' => $this->whenLoaded('cover', fn () => $this->cover?->url, config('media.defaults.post_cover')),
             'author' => new UserResource($this->whenLoaded('author')),
         ];
     }

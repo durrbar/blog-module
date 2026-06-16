@@ -30,6 +30,8 @@ class PostJsonApiResource extends JsonApiResource
             'totalViews' => (int) $this->total_views,
             'totalShares' => (int) $this->total_shares,
             'totalFavorites' => (int) $this->total_favorites,
+            'publish' => $this->publish instanceof PostPublishStatus ? $this->publish->value : $this->publish,
+            'duration' => $this->readTime,
             'createdAt' => $this->created_at?->toISOString(),
             'updatedAt' => $this->updated_at?->toISOString(),
             'deletedAt' => $this->deleted_at?->toISOString(),
@@ -72,8 +74,6 @@ class PostJsonApiResource extends JsonApiResource
     public function toMeta(Request $request): array
     {
         return [
-            'publish' => $this->publish instanceof PostPublishStatus ? $this->publish->value : $this->publish,
-            'duration' => $this->readTime,
         ];
     }
 }

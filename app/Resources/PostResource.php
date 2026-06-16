@@ -8,7 +8,6 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Modules\Blog\Enums\PostPublishStatus;
 use Modules\Comment\Http\Resources\CommentCollection;
-use Modules\Tag\Resources\TagResource;
 use Modules\User\Resources\UserResource;
 
 class PostResource extends JsonResource
@@ -39,9 +38,9 @@ class PostResource extends JsonResource
             'deletedAt' => $this->deleted_at,
             'comments' => CommentCollection::make($this->whenLoaded('comments')),
             'totalComments' => $this->whenCounted('comments'),
-            'coverUrl' => $this->whenLoaded('cover', fn () => $this->cover?->url),
+            'coverUrl' => $this->whenLoaded('cover', fn () => $this->cover?->url, config('media.defaults.post_cover')),
             'author' => new UserResource($this->whenLoaded('author')),
-            'tags' => TagResource::collection($this->whenLoaded('tags')),
+            'tags' => $this->whenLoaded('tags', fn () => $this->tags->pluck('name')->toArray()),
         ];
     }
 }

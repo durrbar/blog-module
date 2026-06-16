@@ -39,7 +39,7 @@ class PostAdminController extends Controller
 
         $posts = Cache::remember($cacheKey, $cacheDuration, static fn () => QueryBuilder::for(Post::class)
             ->allowedFields('id', 'slug', 'title', 'author_id', 'created_at', 'total_views', 'total_shares')
-            ->with(['author', 'cover', 'tags'])
+            ->with(['author', 'cover', 'tags:name'])
             ->allowedFilters(AllowedFilter::exact('publish'))
             ->allowedSorts('created_at')
             ->withCount(['comments' => fn (Builder $query) => $query->whereNull('parent_id')])

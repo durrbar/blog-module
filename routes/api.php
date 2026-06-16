@@ -5,8 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Route;
 use Modules\Blog\Http\Controllers\PostAdminController;
 use Modules\Blog\Http\Controllers\PostController;
-use Modules\Tag\Models\Tag;
-use Modules\Tag\Resources\TagResource;
+use Modules\Blog\Models\Tag;
 
 /*
  *--------------------------------------------------------------------------
@@ -23,7 +22,7 @@ Route::prefix('v1')->group(function (): void {
     Route::middleware(['auth:sanctum'])->name('dashboard.')->prefix('dashboard')->group(function (): void {
         Route::apiResource('posts', PostAdminController::class)->withTrashed()->names('posts');
 
-        Route::get('tag', fn () => ['tags' => TagResource::collection(Tag::all())]);
+        Route::get('tag', fn () => ['tags' => Tag::select('name')->get()->pluck('name')]);
     });
 
     Route::controller(PostController::class)->name('posts.')->prefix('posts')->group(function (): void {

@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Cache;
 use Modules\Blog\Enums\PostPublishStatus;
 use Modules\Blog\Http\Controllers\Traits\HandlesPostOperations;
 use Modules\Blog\Models\Post;
-use Modules\Blog\Resources\FeaturedPostResource;
+use Modules\Blog\Resources\CommonPostResource;
 use Modules\Blog\Resources\PostCollection;
 use Modules\Blog\Resources\PostResource;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -56,7 +56,7 @@ class PostController extends Controller
     public function featured(): JsonResponse
     {
         try {
-            $featureds = Cache::remember(self::CACHE_FEATURED_POSTS, now()->addMinutes(config('cache.duration')), static fn () => Post::query()
+            $featureds = Cache::remember(self::CACHE_FEATURED_POSTS, CACHE_DURATION, static fn () => Post::query()
                 ->where('featured', true)
                 ->select('id', 'slug', 'title', 'author_id', 'created_at', 'total_views', 'total_shares')
                 ->with(['author', 'cover'])
@@ -64,7 +64,7 @@ class PostController extends Controller
                 ->limit(5)
                 ->get());
 
-            return response()->json(['featureds' => FeaturedPostResource::collection($featureds)], Response::HTTP_OK);
+            return response()->json(['featureds' => CommonPostResource::collection($featureds)], Response::HTTP_OK);
         } catch (Exception $e) {
             return $this->handleError(self::ERROR_FEATURED.': '.$e->getMessage(), null);
         }
@@ -73,7 +73,7 @@ class PostController extends Controller
     public function latest(): JsonResponse
     {
         try {
-            $latest = Cache::remember(self::CACHE_LATEST_POSTS, now()->addMinutes(config('cache.duration')), static fn () => Post::query()
+            $latest = Cache::remember(self::CACHE_LATEST_POSTS, CACHE_DURATION, static fn () => Post::query()
                 ->select(
                     'id',
                     'slug',
@@ -91,7 +91,7 @@ class PostController extends Controller
                 ->limit(5)
                 ->get());
 
-            return response()->json(['latest' => FeaturedPostResource::collection($latest)], Response::HTTP_OK);
+            return response()->json(['latest' => CommonPostResource::collection($latest)], Response::HTTP_OK);
         } catch (Exception $e) {
             return $this->handleError(self::ERROR_LATEST.': '.$e->getMessage(), null);
         }
