@@ -34,7 +34,7 @@ class PostController extends Controller
         $posts = Cache::remember($cacheKey, CACHE_DURATION, static fn () => QueryBuilder::for(Post::class)
             ->allowedFields('id', 'slug', 'title', 'author_id', 'created_at', 'total_views', 'total_shares')
             ->with(['author', 'cover'])
-            ->where('publish', PostPublishStatus::Published->value)
+            ->where('publish', PostPublishStatus::Published)
             ->paginate(10))
             ->appends(request()->query());
 
