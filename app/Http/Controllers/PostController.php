@@ -18,6 +18,7 @@ use Modules\Blog\Models\Post;
 use Modules\Blog\Resources\CommonPostResource;
 use Modules\Blog\Resources\PostCollection;
 use Modules\Blog\Resources\PostResource;
+use Modules\Core\Support\Cache\CacheInterval;
 use Spatie\QueryBuilder\QueryBuilder;
 use Spatie\Searchable\ModelSearchAspect;
 use Spatie\Searchable\Search;
@@ -31,7 +32,7 @@ class PostController extends Controller
     {
         $cacheKey = self::CACHE_PUBLIC_POSTS.$request->integer('page', 1);
 
-        $posts = Cache::remember($cacheKey, CACHE_DURATION, static fn () => QueryBuilder::for(Post::class)
+        $posts = Cache::flexible($cacheKey, CacheInterval::forFlexible(), static fn () => QueryBuilder::for(Post::class)
             ->allowedFields('id', 'slug', 'title', 'author_id', 'created_at', 'total_views', 'total_shares')
             ->with(['author', 'cover'])
             ->where('publish', PostPublishStatus::Published)
@@ -48,7 +49,7 @@ class PostController extends Controller
     {
         $cacheKey = "post_{$post->id}";
 
-        $post = Cache::remember($cacheKey, CACHE_DURATION, fn () => $this->loadPostRelations($post));
+        $post = Cache::flexible($cacheKey, CacheInterval::forFlexible(), fn () => $this->loadPostRelations($post));
 
         return response()->json(['post' => new PostResource($post)], Response::HTTP_OK);
     }
@@ -56,7 +57,7 @@ class PostController extends Controller
     public function featured(): JsonResponse
     {
         try {
-            $featureds = Cache::remember(self::CACHE_FEATURED_POSTS, CACHE_DURATION, static fn () => Post::query()
+            $featureds = Cache::flexible(self::CACHE_FEATURED_POSTS, CacheInterval::forFlexible(), static fn () => Post::query()
                 ->where('featured', true)
                 ->select('id', 'slug', 'title', 'author_id', 'created_at', 'total_views', 'total_shares')
                 ->with(['author', 'cover'])
@@ -73,7 +74,7 @@ class PostController extends Controller
     public function latest(): JsonResponse
     {
         try {
-            $latest = Cache::remember(self::CACHE_LATEST_POSTS, CACHE_DURATION, static fn () => Post::query()
+            $latest = Cache::flexible(self::CACHE_LATEST_POSTS, CacheInterval::forFlexible(), static fn () => Post::query()
                 ->select(
                     'id',
                     'slug',
